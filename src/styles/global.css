@@ -1,0 +1,90 @@
+/* Design tokens */
+:root {
+  --c-bg: #ffffff;
+  --c-surface: #f4f4f4;
+  --c-border: #e0e0e0;
+  --c-text: #0f0f0f;
+  --c-text-2: #6b6b6b;
+  --c-text-3: #a0a0a0;
+  --c-accent: #0f0f0f;
+  --c-warmer: #c0392b;
+  --c-colder: #1f6fbf;
+  --c-success: #1e7e44;
+  --c-error: #c0392b;
+}
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+    sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Leaflet popup overrides */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--c-border);
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px;
+  font-size: 14px;
+}
+
+.bar-popup h3 {
+  margin: 0 0 6px 0;
+  color: var(--c-text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.bar-popup p {
+  margin: 3px 0;
+  color: var(--c-text-2);
+  font-size: 13px;
+}
+
+.visit-number {
+  display: inline-block;
+  background: var(--c-text);
+  color: white;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 22px;
+  font-weight: 700;
+  font-size: 11px;
+  margin-right: 4px;
+}
+
+/* Shared animations */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
