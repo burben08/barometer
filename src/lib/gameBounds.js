@@ -10,8 +10,8 @@ export const GAME_BOUNDS_Regions = {
   Europe: { south: 34.5, north: 71.2, west: -25.0, east: 40.0 },
 }
 
-export function calculateBoundsFromCenter(center, size) {
-  const offset = SIZE_PRESETS[size] / 2
+export function calculateBoundsFromDiameterKm(center, diameterKm) {
+  const offset = diameterKm / 2
   const deltaLat = (offset / 6371) * (180 / Math.PI)
   const deltaLon = deltaLat / Math.cos((center.lat * Math.PI) / 180)
   return {
@@ -20,4 +20,17 @@ export function calculateBoundsFromCenter(center, size) {
     east: center.lng + deltaLon,
     west: center.lng - deltaLon,
   }
+}
+
+export function calculateBoundsFromCenter(center, size) {
+  return calculateBoundsFromDiameterKm(center, SIZE_PRESETS[size])
+}
+
+// Actual east-west / north-south extent of a bounding box, in km.
+export function boundsDimensionsKm(bounds) {
+  const R = 6371
+  const heightKm = ((bounds.north - bounds.south) * Math.PI / 180) * R
+  const midLatRad = ((bounds.north + bounds.south) / 2) * Math.PI / 180
+  const widthKm = ((bounds.east - bounds.west) * Math.PI / 180) * R * Math.cos(midLatRad)
+  return { widthKm, heightKm }
 }

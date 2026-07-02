@@ -20,3 +20,18 @@ export async function geocodeLocation(query, bounds = null) {
     name,
   }
 }
+
+export async function reverseGeocode(lat, lng) {
+  const url = `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`
+
+  const response = await fetch(url)
+  if (!response.ok) throw new Error('Network error contacting geocoding service')
+  const data = await response.json()
+  if (!data.features || data.features.length === 0) return null
+
+  const props = data.features[0].properties
+  const name = [props.name, props.city || props.locality, props.country]
+    .filter(Boolean)
+    .join(', ')
+  return { name }
+}

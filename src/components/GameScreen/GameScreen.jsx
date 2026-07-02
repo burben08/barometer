@@ -9,12 +9,24 @@ import {
   lonLatToCartesian,
 } from '../../lib/sphericalPolygon'
 import { isPointInPolygon } from '../../lib/planarPolygon'
-import { getMergedPolygon } from '../../lib/mergePolygons'
+import { mergeZones, zonesToLatLngs, normalizeZones } from '../../lib/mergePolygons'
 import { drawRandomBarFromDensityGrid } from '../../lib/globalBarSelection'
 import { fetchBarsInBounds } from '../../lib/overpassApi'
 import { geocodeLocation } from '../../lib/geocoding'
 import { createSave, updateSave } from '../../lib/savedGames'
 import styles from './GameScreen.module.css'
+
+// Favors bars with a higher freshness `weight` (see overpassApi.js) so the secret bar
+// is less likely to be a stale/permanently-closed OSM entry.
+function pickWeightedBar(bars, rng) {
+  const total = bars.reduce((sum, bar) => sum + (bar.weight || 1), 0)
+  let r = rng() * total
+  for (const bar of bars) {
+    r -= bar.weight || 1
+    if (r < 0) return bar
+  }
+  return bars[bars.length - 1]
+}
 
 function formatSaveDate(iso) {
   if (!iso) return ''
@@ -206,9 +218,9 @@ export default function GameScreen({ config, onReset }) {
       })
 
       if (savedState.mergedZoneCoords?.length > 0) {
-        mergedZoneCoords.current = savedState.mergedZoneCoords
+        mergedZoneCoords.current = normalizeZones(savedState.mergedZoneCoords)
         mergedZoneLayer.current = L.polygon(
-          savedState.mergedZoneCoords.map(c => [c[1], c[0]]),
+          zonesToLatLngs(mergedZoneCoords.current),
           { color: '#0f0f0f', weight: 1, fillColor: '#0f0f0f', fillOpacity: 0.07 }
         ).addTo(m)
       }
@@ -246,7 +258,7 @@ export default function GameScreen({ config, onReset }) {
           }
 
           const rng = seedrandom(seed)
-          const target = bars[Math.floor(rng() * bars.length)]
+          const target = pickWeightedBar(bars, rng)
           console.log('Target:', target.name, '| Seed:', seed)
 
           gsRef.current = {
@@ -384,16 +396,11 @@ export default function GameScreen({ config, onReset }) {
     const p2LonLat = [location.lng, location.lat]
     const newZone = buildPolygon(gameBounds, [p1LonLat, p2LonLat], isWarmer)
 
-    if (mergedZoneCoords.current === null) {
-      mergedZoneCoords.current = newZone
-    } else {
-      const merged = getMergedPolygon([mergedZoneCoords.current, newZone])
-      if (merged && merged.length > 0) mergedZoneCoords.current = merged[0]
-      if (mergedZoneLayer.current) m.removeLayer(mergedZoneLayer.current)
-    }
+    mergedZoneCoords.current = mergeZones(mergedZoneCoords.current, newZone)
+    if (mergedZoneLayer.current) m.removeLayer(mergedZoneLayer.current)
 
     mergedZoneLayer.current = L.polygon(
-      mergedZoneCoords.current.map(c => [c[1], c[0]]),
+      zonesToLatLngs(mergedZoneCoords.current),
       { color: '#0f0f0f', weight: 1, fillColor: '#0f0f0f', fillOpacity: 0.07 }
     ).addTo(m)
 

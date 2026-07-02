@@ -9,8 +9,7 @@ export default function App() {
 
   function handleSetupContinue(config) {
     setGameConfig(config)
-    // Region mode has fixed bounds — skip the boundary adjustment screen
-    setScreen(config.selectedMode === 'region' ? 'game' : 'boundary')
+    setScreen('boundary')
   }
 
   function handleBoundaryStart(updatedConfig) {
