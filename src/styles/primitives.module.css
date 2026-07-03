@@ -1,0 +1,20 @@
+/* Shared "tactile press" building blocks — composed into buttons/chips
+   across components rather than hand-copied, so the press feel stays
+   consistent. Pair `.tactile` with `--c-shadow-md` (3px offset match) and
+   `.tactileSm` with `--c-shadow-sm` (2px offset match). */
+
+.tactile {
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+.tactile:active {
+  transform: translate(3px, 3px);
+  box-shadow: none !important;
+}
+
+.tactileSm {
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+.tactileSm:active {
+  transform: translate(2px, 2px);
+  box-shadow: none !important;
+}

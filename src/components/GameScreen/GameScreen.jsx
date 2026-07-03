@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import L from 'leaflet'
+import { ArrowLeft } from 'lucide-react'
 import seedrandom from 'seedrandom'
 import {
   buildPolygon,
@@ -14,6 +15,7 @@ import { drawRandomBarFromDensityGrid } from '../../lib/globalBarSelection'
 import { fetchBarsInBounds } from '../../lib/overpassApi'
 import { geocodeLocation } from '../../lib/geocoding'
 import { createSave, updateSave } from '../../lib/savedGames'
+import { THEME } from '../../lib/theme'
 import styles from './GameScreen.module.css'
 
 // Favors bars with a higher freshness `weight` (see overpassApi.js) so the secret bar
@@ -28,28 +30,20 @@ function pickWeightedBar(bars, rng) {
   return bars[bars.length - 1]
 }
 
-function formatSaveDate(iso) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  return (
-    d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) +
-    ' at ' +
-    d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-  )
-}
-
 // ── Leaflet icons ──────────────────────────────────────────────────────────
 const makeVisitedIcon = (number, isWarmer) =>
   L.divIcon({
-    html: `<div style="background:${isWarmer ? '#c0392b' : '#1f6fbf'};color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25);">${number}</div>`,
+    html: `<div style="background:${isWarmer ? THEME.warmer : THEME.colder};color:${THEME.text};width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:${THEME.fontDisplay};font-weight:800;font-size:14px;border:${THEME.borderW.regular}px solid ${THEME.border};box-shadow:${THEME.shadow.sm};">${number}</div>`,
     className: '',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16],
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    popupAnchor: [0, -17],
   })
 
+// One-shot bounce (no `infinite`) instead of the old looping pulse — the
+// design system reserves infinite loops for the current-location pulse only.
 const WIN_ICON = L.divIcon({
-  html: '<div style="background:#1e7e44;color:white;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;border:3px solid white;box-shadow:0 2px 12px rgba(0,0,0,0.3);animation:pulse 1s infinite;">✓</div>',
+  html: `<div style="background:${THEME.success};color:white;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;border:${THEME.borderW.regular}px solid ${THEME.border};box-shadow:${THEME.shadow.md};animation:bounce-once 500ms ease-out;">✓</div>`,
   className: '',
   iconSize: [40, 40],
   iconAnchor: [20, 20],
@@ -57,7 +51,7 @@ const WIN_ICON = L.divIcon({
 })
 
 const START_ICON = L.divIcon({
-  html: '<div style="background:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #0f0f0f;box-shadow:0 2px 8px rgba(0,0,0,0.2);"><div style="width:8px;height:8px;background:#0f0f0f;border-radius:50%;"></div></div>',
+  html: `<div style="background:${THEME.surface};width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:${THEME.borderW.regular}px solid ${THEME.border};box-shadow:${THEME.shadow.sm};"><div style="width:8px;height:8px;background:${THEME.border};border-radius:50%;"></div></div>`,
   className: '',
   iconSize: [28, 28],
   iconAnchor: [14, 14],
@@ -65,7 +59,7 @@ const START_ICON = L.divIcon({
 })
 
 const PREVIEW_ICON = L.divIcon({
-  html: '<div style="background:#0f0f0f;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">?</div>',
+  html: `<div style="background:${THEME.secondary};color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;border:${THEME.borderW.regular}px solid ${THEME.border};box-shadow:${THEME.shadow.sm};">?</div>`,
   className: '',
   iconSize: [32, 32],
   iconAnchor: [16, 16],
@@ -112,7 +106,6 @@ export default function GameScreen({ config, onReset }) {
   const [banner, setBanner] = useState(null)     // { text, type: 'error'|'success'|'info' }
   const [remainingBars, setRemainingBars] = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
-  const [saveConfirmState, setSaveConfirmState] = useState(false)
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   function showFeedback(text, type) {
@@ -135,7 +128,7 @@ export default function GameScreen({ config, onReset }) {
     if (bars.length > 0) {
       const points = [[startLocation.lat, startLocation.lng], ...bars.map(b => [b.lat, b.lng])]
       pathLineRef.current = L.polyline(points, {
-        color: '#0f0f0f', weight: 2, opacity: 0.5, dashArray: '8, 8',
+        color: THEME.border, weight: 3, opacity: 0.6, dashArray: '8, 8',
       }).addTo(m)
     }
   }
@@ -148,6 +141,16 @@ export default function GameScreen({ config, onReset }) {
     previewedBar.current = null
     setIsPreviewing(false)
     setInputValue('')
+  }
+
+  // Silently creates a save on game start, then keeps overwriting that same
+  // save on every guess — no manual save button, no overwrite prompt.
+  function autosave(count) {
+    const gs = gsRef.current
+    const result = currentSaveRef.current.id
+      ? updateSave(currentSaveRef.current.id, config, gs, allBarsRef.current, mergedZoneCoords.current, count)
+      : createSave(config, gs, allBarsRef.current, mergedZoneCoords.current, count)
+    currentSaveRef.current = result
   }
 
   // Invalidate Leaflet size after panel transitions
@@ -167,7 +170,7 @@ export default function GameScreen({ config, onReset }) {
 
     const gameArea = L.rectangle(
       [[gameBounds.south, gameBounds.west], [gameBounds.north, gameBounds.east]],
-      { color: '#0f0f0f', weight: 1.5, fillOpacity: 0.03, dashArray: '6, 5' }
+      { color: THEME.border, weight: 2, fillOpacity: 0.05, dashArray: '6, 5' }
     ).addTo(m)
     m.fitBounds(gameArea.getBounds(), { padding: [10, 10] })
 
@@ -189,7 +192,7 @@ export default function GameScreen({ config, onReset }) {
       if (seed === 'Hacker') {
         allBarsRef.current.forEach(bar => {
           const icon = L.divIcon({
-            html: '<div style="background:#c0392b;width:10px;height:10px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>',
+            html: `<div style="background:${THEME.danger};width:10px;height:10px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
             className: '',
           })
           L.marker([bar.lat, bar.lng], { icon })
@@ -204,7 +207,7 @@ export default function GameScreen({ config, onReset }) {
         const number = i + 1
         const isWin = gsRef.current.gameWon && i === gsRef.current.visitedBars.length - 1
         const icon = isWin ? WIN_ICON : makeVisitedIcon(number, bar.isWarmer)
-        L.marker([bar.lat, bar.lng], { icon })
+        const marker = L.marker([bar.lat, bar.lng], { icon })
           .addTo(m)
           .bindPopup(
             `<div class="bar-popup">
@@ -212,16 +215,14 @@ export default function GameScreen({ config, onReset }) {
               <p>${isWin ? 'Found it!' : bar.isWarmer ? 'Warmer' : 'Colder'} · Visit ${number}</p>
             </div>`
           )
-        markersRef.current.push(
-          L.marker([bar.lat, bar.lng], { icon }).addTo(m)
-        )
+        markersRef.current.push(marker)
       })
 
       if (savedState.mergedZoneCoords?.length > 0) {
         mergedZoneCoords.current = normalizeZones(savedState.mergedZoneCoords)
         mergedZoneLayer.current = L.polygon(
           zonesToLatLngs(mergedZoneCoords.current),
-          { color: '#0f0f0f', weight: 1, fillColor: '#0f0f0f', fillOpacity: 0.07 }
+          { color: THEME.border, weight: 2, fillColor: THEME.border, fillOpacity: 0.12 }
         ).addTo(m)
       }
 
@@ -247,7 +248,7 @@ export default function GameScreen({ config, onReset }) {
           if (seed === 'Hacker') {
             bars.forEach(bar => {
               const icon = L.divIcon({
-                html: '<div style="background:#c0392b;width:10px;height:10px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>',
+                html: `<div style="background:${THEME.danger};width:10px;height:10px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
                 className: '',
               })
               L.marker([bar.lat, bar.lng], { icon }).addTo(m)
@@ -267,6 +268,7 @@ export default function GameScreen({ config, onReset }) {
             visitedBars: [],
             gameWon: false,
           }
+          autosave(0)
 
           setIsLoading(false)
           showBanner(`${bars.length} bars loaded. Find the hidden one!`, 'success', 3000)
@@ -341,7 +343,7 @@ export default function GameScreen({ config, onReset }) {
 
       previewMarkerRef.current = L.marker([location.lat, location.lng], { icon: PREVIEW_ICON }).addTo(m)
       previewLineRef.current = L.polyline(leafletCoords, {
-        color: '#0f0f0f', weight: 2, opacity: 0.6, dashArray: '8, 6',
+        color: THEME.secondary, weight: 3, opacity: 0.7, dashArray: '8, 6',
       }).addTo(m)
 
       m.fitBounds(
@@ -401,7 +403,7 @@ export default function GameScreen({ config, onReset }) {
 
     mergedZoneLayer.current = L.polygon(
       zonesToLatLngs(mergedZoneCoords.current),
-      { color: '#0f0f0f', weight: 1, fillColor: '#0f0f0f', fillOpacity: 0.07 }
+      { color: THEME.border, weight: 2, fillColor: THEME.border, fillOpacity: 0.12 }
     ).addTo(m)
 
     if (seed === 'Hacker') {
@@ -415,44 +417,26 @@ export default function GameScreen({ config, onReset }) {
     updatePath()
     m.flyTo([location.lat, location.lng], Math.max(m.getZoom(), 14), { duration: 1 })
 
+    // gs.gameWon must be set before autosave() so the save it writes is
+    // correctly flagged as finished (and the winning marker is drawn green
+    // on restore) — see the restore-path isWin check further up.
+    if (isWin) gs.gameWon = true
+    autosave(newCount)
+
     if (isWin) {
-      gs.gameWon = true
       setGameWon(true)
       setTargetDisplay(gs.targetBar)
       setPanelOpen(true) // lock panel open on win
       setFeedback(null)
-      const result = currentSaveRef.current.id
-        ? updateSave(currentSaveRef.current.id, config, gs, allBarsRef.current, mergedZoneCoords.current, newCount)
-        : createSave(config, gs, allBarsRef.current, mergedZoneCoords.current, newCount)
-      currentSaveRef.current = result
     } else {
       showFeedback(isWarmer ? 'Warmer' : 'Colder', isWarmer ? 'warmer' : 'colder')
     }
   }
 
-  // ── Save ──────────────────────────────────────────────────────────────────
+  // ── Share ─────────────────────────────────────────────────────────────────
   function showSeedInfo() {
     showBanner(`Seed: ${seed} — share for the same game!`, 'info', 5000)
     navigator.clipboard.writeText(seed).catch(() => {})
-  }
-
-  function handleSave() {
-    if (!gsRef.current.targetBar) return
-    if (currentSaveRef.current.id) {
-      setSaveConfirmState(true)
-    } else {
-      doSave(null)
-    }
-  }
-
-  function doSave(overwriteId) {
-    const gs = gsRef.current
-    const result = overwriteId
-      ? updateSave(overwriteId, config, gs, allBarsRef.current, mergedZoneCoords.current, visitCount)
-      : createSave(config, gs, allBarsRef.current, mergedZoneCoords.current, visitCount)
-    currentSaveRef.current = result
-    setSaveConfirmState(false)
-    showBanner('Game saved.', 'success', 2500)
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -473,46 +457,16 @@ export default function GameScreen({ config, onReset }) {
   return (
     <div className={styles.screen}>
 
-      {/* ── Save overwrite dialog ── */}
-      {saveConfirmState && (
-        <div className={styles.saveOverlay}>
-          <div className={styles.saveDialog}>
-            <p>
-              {currentSaveRef.current.savedAt
-                ? <>Overwrite save from <strong>{formatSaveDate(currentSaveRef.current.savedAt)}</strong>?</>
-                : 'Overwrite existing save?'
-              }
-            </p>
-            <div className={styles.saveDialogBtns}>
-              <button className={styles.dialogOverwrite} onClick={() => doSave(currentSaveRef.current.id)}>
-                Overwrite
-              </button>
-              <button className={styles.dialogSaveNew} onClick={() => doSave(null)}>
-                Save as New
-              </button>
-              <button className={styles.dialogCancel} onClick={() => setSaveConfirmState(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── Map wrapper ── */}
       <div className={styles.mapWrapper}>
         <div ref={mapContainerRef} className={styles.map} />
 
         <div className={styles.floatingBtns}>
-          <button className={styles.floatBtn} onClick={onReset} title="Exit game">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M19 12H5M12 5l-7 7 7 7"/>
-            </svg>
-            Exit
-          </button>
           <div className={styles.floatBtnsRight}>
-            {!isLoading && !gameWon && (
-              <button className={styles.floatBtn} onClick={handleSave}>Save</button>
-            )}
+            <button className={styles.floatBtn} onClick={onReset} title="Exit game">
+              <ArrowLeft size={14} strokeWidth={2.5} />
+              Exit
+            </button>
             <button className={styles.floatBtn} onClick={showSeedInfo}>Share</button>
           </div>
         </div>

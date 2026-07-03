@@ -1,0 +1,127 @@
+/* ==========================================================================
+   DESIGN TOKENS — "Playful Neo-Brutalism"
+   Source of truth for color, type, radius, shadow, and motion. Plain CSS
+   custom properties, consumed directly as var(--c-x) — no Tailwind needed.
+
+   Usage: @import this file once from your app's global stylesheet (see
+   CLAUDE.md's "New project setup" section), e.g.:
+     @import "./design-system/tokens.css";
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Surfaces */
+  --c-bg: #F4ECE1;
+  --c-surface: #FFFFFF;
+  --c-surface-raised: #FFFFFF;
+
+  /* Ink */
+  --c-text: #14110F;
+  --c-text-2: #6B655D;
+  --c-text-3: #A8A096;      /* a 3rd muted tier, blended toward bg — for the least-important text */
+  --c-border: #14110F;      /* stroke color for every outline, same as ink */
+
+  /* Brand / action */
+  --c-primary: #FF6B6B;          /* coral — main CTA, positive/"warmer" signal */
+  --c-primary-pastel: #FF8C69;
+  --c-secondary: #7C6CFF;        /* violet — secondary actions, links, active states */
+  --c-secondary-pastel: #C5C1FF;
+  --c-tertiary-pastel: #8CB1F5;  /* sky blue — third accent, also doubles as "colder" signal */
+
+  /* Semantic */
+  --c-success: #58B06A;
+  --c-success-pastel: #A8E6B8;
+  --c-warning: #FFC93C;
+  --c-danger: #FF3B3B;
+  --c-info: #8CB1F5;
+  --c-scrim: rgba(20, 17, 15, 0.5);   /* modal/dialog backdrop overlay */
+
+  /* Type */
+  --c-font-display: 'Space Grotesk', sans-serif;   /* headings, big numbers — always heavy weight */
+  --c-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Radius scale: chip (badges/inputs/small tags) < control (buttons/form
+     controls) < card (cards) < sheet (bottom sheets/modals/the map frame) */
+  --c-radius-chip: 0.75rem;    /* 12px */
+  --c-radius-control: 1rem;    /* 16px */
+  --c-radius-card: 1.5rem;     /* 24px */
+  --c-radius-sheet: 2rem;      /* 32px */
+
+  /* Border-width scale: thin (chips/inputs) < regular (buttons/cards,
+     default) < thick (hero containers, the map frame) */
+  --c-border-w-thin: 2px;
+  --c-border-w-regular: 3px;
+  --c-border-w-thick: 4px;
+
+  /* Hard offset shadows — the signature look: solid, zero blur, always this
+     exact ink color regardless of what's casting the shadow. Never use a
+     blurred `box-shadow` anywhere in this system. */
+  --c-shadow-sm: 2px 2px 0px #14110F;
+  --c-shadow-md: 4px 4px 0px #14110F;
+  --c-shadow-lg: 6px 6px 0px #14110F;
+}
+
+body {
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--c-font-body);
+}
+
+/* ==========================================================================
+   MOTION — a handful of purposeful keyframes. No animation library needed.
+   Pair interactive elements with the tactile press pattern (see
+   primitives.module.css) rather than reaching for a new animation —
+   consistency beats novelty here. Keep everything under ~500ms. Nothing
+   should loop except the current-location pulse.
+   ========================================================================== */
+
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.85); }
+  70%  { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes bounce-once {
+  0%, 100% { transform: translateY(0); }
+  30%      { transform: translateY(-6px); }
+  55%      { transform: translateY(0); }
+  75%      { transform: translateY(-2px); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-4px); }
+  40%      { transform: translateX(4px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(3px); }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(0.6); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+@keyframes slide-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+/* Not part of the original 5 — a pragmatic addition for loading spinners,
+   which the system otherwise has no pattern for. */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Usage: animation: pop-in 220ms cubic-bezier(.34,1.56,.64,1) both;      → modals, new map pins, achievement badges
+          animation: bounce-once 500ms ease-out;                        → a value that just changed, a win marker
+          animation: shake 400ms ease-in-out;                           → invalid input, failed action
+          animation: slide-up 220ms ease-out;                           → toasts/banners entering
+          animation: spin 0.8s linear infinite;                        → loading spinners (the one allowed loop besides pulse-ring) */
+
+/* "You are here"-style pulsing marker. Wrap a `position: relative`
+   container with class="pulse-ring" and put a solid dot inside it. */
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: rgba(124, 108, 255, 0.5);
+  animation: pulse-ring 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}

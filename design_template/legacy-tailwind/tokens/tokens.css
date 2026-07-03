@@ -1,0 +1,120 @@
+/* ==========================================================================
+   DESIGN TOKENS — "Playful Neo-Brutalism" for geolocation logging games
+   Source of truth for color, type, radius, shadow, and motion.
+   Import this file once in your app's global stylesheet, e.g.:
+     @import "../design-system/tokens/tokens.css";
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ---- Base surfaces ---- */
+  --color-bg: 244 236 225;              /* #F4ECE1 warm cream app canvas */
+  --color-surface: 255 255 255;         /* #FFFFFF cards, panels, sheets */
+  --color-surface-raised: 255 255 255;  /* surface floating above the map */
+
+  /* ---- Ink ---- */
+  --color-ink: 20 17 15;                /* #14110F near-black text (never pure #000) */
+  --color-ink-muted: 107 101 93;        /* #6B655D secondary text */
+  --color-border: 20 17 15;             /* stroke color for every outline, same as ink */
+
+  /* ---- Brand / action ---- */
+  --color-primary: 255 107 107;          /* #FF6B6B coral — main CTA, log/check-in actions */
+  --color-primary-pastel: 255 140 105;   /* #FF8C69 soft coral for large surfaces */
+  --color-secondary: 124 108 255;        /* #7C6CFF violet — secondary actions, active states */
+  --color-secondary-pastel: 197 193 255; /* #C5C1FF soft violet for large surfaces */
+  --color-tertiary-pastel: 140 177 245;  /* #8CB1F5 sky blue, third accent for variety */
+
+  /* ---- Semantic ---- */
+  --color-success: 88 176 106;           /* #58B06A streaks, XP gain, confirmations */
+  --color-success-pastel: 168 230 184;   /* #A8E6B8 */
+  --color-warning: 255 201 60;           /* #FFC93C rewards, highlights, caution */
+  --color-danger: 255 59 59;             /* #FF3B3B destructive actions, errors */
+  --color-info: 140 177 245;             /* #8CB1F5 */
+
+  /* ---- Fonts ---- */
+  --font-display: 'Space Grotesk', sans-serif;  /* headings, stats, big numbers */
+  --font-body: 'Inter', sans-serif;             /* everything else */
+
+  /* ---- Radius ---- */
+  --radius-chip: 0.75rem;   /* 12px — badges, inputs, small tags */
+  --radius-control: 1rem;   /* 16px — buttons, form controls */
+  --radius-card: 1.5rem;    /* 24px — cards */
+  --radius-sheet: 2rem;     /* 32px — bottom sheets, modals, map frame */
+
+  /* ---- Border weight ---- */
+  --border-thin: 2px;     /* chips, inputs */
+  --border-regular: 3px;  /* buttons, cards (default) */
+  --border-thick: 4px;    /* hero containers, the map frame */
+
+  /* ---- Hard shadow — the signature look: solid offset, zero blur ---- */
+  --shadow-color: 20 17 15;
+  --shadow-sm: 2px 2px 0px rgb(var(--shadow-color));
+  --shadow-md: 4px 4px 0px rgb(var(--shadow-color));
+  --shadow-lg: 6px 6px 0px rgb(var(--shadow-color));
+}
+
+/* Night mode — add class="dark" to <html>. Useful outdoors after sunset. */
+.dark {
+  --color-bg: 20 17 15;
+  --color-surface: 32 28 24;
+  --color-surface-raised: 40 35 30;
+  --color-ink: 244 236 225;
+  --color-ink-muted: 167 158 146;
+  --color-border: 244 236 225;
+  --shadow-color: 244 236 225;
+}
+
+/* ==========================================================================
+   MOTION — a handful of purposeful keyframes. No animation library needed.
+   Pair interactive elements with the "tactile" press pattern (see utils.ts)
+   rather than reaching for new animations — consistency beats novelty here.
+   ========================================================================== */
+
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.85); }
+  70%  { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes bounce-once {
+  0%, 100% { transform: translateY(0); }
+  30%      { transform: translateY(-6px); }
+  55%      { transform: translateY(0); }
+  75%      { transform: translateY(-2px); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-4px); }
+  40%      { transform: translateX(4px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(3px); }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(0.6); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+@keyframes slide-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.animate-pop-in     { animation: pop-in 220ms cubic-bezier(.34,1.56,.64,1) both; }
+.animate-bounce-once { animation: bounce-once 500ms ease-out both; }
+.animate-shake       { animation: shake 400ms ease-in-out both; }
+.animate-slide-up    { animation: slide-up 220ms ease-out both; }
+
+/* "You are here" map marker: <span className="relative pulse-ring"> */
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: rgb(var(--color-secondary) / 0.5);
+  animation: pulse-ring 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+body {
+  background: rgb(var(--color-bg));
+  color: rgb(var(--color-ink));
+  font-family: var(--font-body);
+}

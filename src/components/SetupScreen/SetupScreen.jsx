@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { MapPin, Keyboard, LocateFixed } from 'lucide-react'
 import { geocodeLocation, reverseGeocode } from '../../lib/geocoding'
 import { getSaves, deleteSave } from '../../lib/savedGames'
 import styles from './SetupScreen.module.css'
@@ -141,17 +142,17 @@ export default function SetupScreen({ onContinue, onLoadSave }) {
         <h1 className={styles.title}>Barometer</h1>
         <p className={styles.subtitle}>Find the secret bar</p>
 
-        {/* Starting Location */}
-        <AccordionSection
-          label="Starting Location"
-          active={activeSection === 'location'}
-          onToggle={() => toggleSection('location')}
-        >
+        {/* Starting Location — the only visible section, so it's a plain
+            static card rather than a collapsible accordion. */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeaderStatic}>
+            <span className={styles.sectionTitle}>Starting Location</span>
+          </div>
           <div className={styles.sectionInner}>
             {locationMode === 'current' ? (
               <div className={styles.locationCard}>
                 <div className={styles.locationCardRow}>
-                  <span className={styles.locationPin}>📍</span>
+                  <MapPin size={20} className={styles.locationPin} />
                   <div className={styles.locationCardText}>
                     {geoStatus === 'loading' && <span className={styles.locationStatus}>Detecting your location…</span>}
                     {geoStatus === 'success' && (
@@ -166,9 +167,10 @@ export default function SetupScreen({ onContinue, onLoadSave }) {
                 </div>
                 <button
                   type="button"
-                  className={styles.locationLink}
+                  className={styles.navBtn}
                   onClick={() => setLocationMode('manual')}
                 >
+                  <Keyboard size={16} />
                   Enter a location manually instead
                 </button>
               </div>
@@ -185,18 +187,19 @@ export default function SetupScreen({ onContinue, onLoadSave }) {
                 />
                 <button
                   type="button"
-                  className={styles.locationLink}
+                  className={styles.navBtn}
                   onClick={() => {
                     setLocationMode('current')
                     if (geoStatus !== 'success') detectCurrentLocation()
                   }}
                 >
-                  📍 Use my current location instead
+                  <LocateFixed size={16} />
+                  Use my current location instead
                 </button>
               </div>
             )}
           </div>
-        </AccordionSection>
+        </div>
 
         {/* Advanced — hidden for now to keep the prototype simple; functionality kept intact */}
         {SHOW_ADVANCED && (

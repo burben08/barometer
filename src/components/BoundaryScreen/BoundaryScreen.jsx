@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import L from 'leaflet'
+import { Globe, Pencil, ArrowLeft } from 'lucide-react'
 import { SIZE_PRESETS, STEP_SIZES, SIZES, REGIONS, REGION_FLAGS } from '../../constants'
 import {
   GAME_BOUNDS_Regions,
@@ -7,6 +8,7 @@ import {
   calculateBoundsFromDiameterKm,
   boundsDimensionsKm,
 } from '../../lib/gameBounds'
+import { THEME } from '../../lib/theme'
 import styles from './BoundaryScreen.module.css'
 
 const DIRECTIONS = ['north', 'south', 'east', 'west']
@@ -23,9 +25,34 @@ const MIN_GAP_DEG = 0.002 // ~220m — prevents the box collapsing/inverting whi
 // end (S/M/L, what most games use) than at the huge end.
 const sliderToKm = t => MIN_KM * Math.pow(MAX_KM / MIN_KM, t)
 const kmToSlider = km => Math.log(km / MIN_KM) / Math.log(MAX_KM / MIN_KM)
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 
 function formatSize(km) {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${Math.round(km * 10) / 10} km`
+}
+
+// A single representative size (avg of the two dimensions) for a possibly
+// non-square box — keeps the summary/slider to one number instead of a
+// width x height pair that reads like an area calculation.
+function effectiveKm(bounds) {
+  const { widthKm, heightKm } = boundsDimensionsKm(bounds)
+  return clamp((widthKm + heightKm) / 2, MIN_KM, MAX_KM)
+}
+
+// Scales a box around its own center by `factor`, preserving its aspect
+// ratio and position — used so moving the slider after a corner-drag
+// resizes the dragged shape instead of resetting to a fresh square.
+function scaleBounds(bounds, factor) {
+  const centerLat = (bounds.north + bounds.south) / 2
+  const centerLng = (bounds.east + bounds.west) / 2
+  const halfLat = ((bounds.north - bounds.south) / 2) * factor
+  const halfLng = ((bounds.east - bounds.west) / 2) * factor
+  return {
+    north: centerLat + halfLat,
+    south: centerLat - halfLat,
+    east: centerLng + halfLng,
+    west: centerLng - halfLng,
+  }
 }
 
 // Which two edges of the bounding box each corner handle controls.
@@ -37,10 +64,10 @@ const CORNERS = {
 }
 
 const CORNER_ICON = L.divIcon({
-  html: '<div style="width:26px;height:26px;background:white;border:3px solid #0f0f0f;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.35);cursor:grab;"></div>',
+  html: `<div style="width:28px;height:28px;background:${THEME.surface};border:${THEME.borderW.regular}px solid ${THEME.border};border-radius:50%;box-shadow:3px 3px 0px ${THEME.border};cursor:grab;"></div>`,
   className: '',
-  iconSize: [26, 26],
-  iconAnchor: [13, 13],
+  iconSize: [28, 28],
+  iconAnchor: [14, 14],
 })
 
 function cornerLatLng(name, bounds) {
@@ -104,7 +131,7 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
     if (rectangleRef.current) rectangleRef.current.remove()
     const bounds = [[gameBounds.south, gameBounds.west], [gameBounds.north, gameBounds.east]]
     rectangleRef.current = L.rectangle(bounds, {
-      color: '#0f0f0f',
+      color: THEME.border,
       weight: 2,
       fillOpacity: 0.05,
     }).addTo(m)
@@ -150,6 +177,7 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
         skipFitRef.current = true
         setLiveDragBounds(null)
         setGameBounds(liveBoundsRef.current)
+        setCustomKm(effectiveKm(liveBoundsRef.current))
       })
 
       markers[name] = marker
@@ -184,12 +212,16 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
     setPanelMode('custom')
   }
 
+  // Scales the current shape (square or already-dragged) rather than
+  // recomputing a fresh symmetric square, so reshaping via corner-drag and
+  // then resizing via the slider compose instead of one undoing the other.
   function handleSlider(t) {
     const km = sliderToKm(t)
+    const next = scaleBounds(gameBounds, km / customKm)
     setCustomKm(km)
     setSelectedSize('Custom')
     setSelectedMode('custom')
-    setGameBounds(calculateBoundsFromDiameterKm(config.startLocation, km))
+    setGameBounds(next)
   }
 
   function adjustBoundary(direction, sign) {
@@ -211,8 +243,6 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
     onStart({ ...config, selectedSize, selectedMode, gameBounds })
   }
 
-  const { widthKm, heightKm } = boundsDimensionsKm(liveDragBounds ?? gameBounds)
-
   return (
     <div className={styles.screen}>
       <div ref={mapContainerRef} className={styles.map} />
@@ -223,7 +253,7 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
           {selectedMode === 'region'
             ? `${REGION_FLAGS[selectedSize]} ${selectedSize} · country boundary`
             : selectedSize === 'Custom'
-              ? `Custom · ${formatSize(widthKm)} × ${formatSize(heightKm)}`
+              ? `Custom · ${formatSize(effectiveKm(liveDragBounds ?? gameBounds))} across`
               : `${selectedSize} · ${formatSize(SIZE_PRESETS[selectedSize])} across`}
         </div>
 
@@ -242,11 +272,13 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
               ))}
             </div>
 
-            <button type="button" className={styles.link} onClick={() => setPanelMode('country')}>
-              🌍 Use a country boundary instead
+            <button type="button" className={styles.navBtn} onClick={() => setPanelMode('country')}>
+              <Globe size={16} />
+              Use a country boundary instead
             </button>
-            <button type="button" className={styles.link} onClick={enterCustomMode}>
-              ✏️ Draw a custom boundary instead
+            <button type="button" className={styles.navBtn} onClick={enterCustomMode}>
+              <Pencil size={16} />
+              Draw a custom boundary instead
             </button>
           </>
         )}
@@ -265,8 +297,9 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
               ))}
             </div>
 
-            <button type="button" className={styles.link} onClick={() => setPanelMode('sizes')}>
-              ↩ Back to size selection
+            <button type="button" className={styles.navBtn} onClick={() => setPanelMode('sizes')}>
+              <ArrowLeft size={16} />
+              Back to size selection
             </button>
           </>
         )}
@@ -297,8 +330,9 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
               <span>HUGE</span>
             </div>
 
-            <button type="button" className={styles.link} onClick={() => setPanelMode('sizes')}>
-              ↩ Back to size selection
+            <button type="button" className={styles.navBtn} onClick={() => setPanelMode('sizes')}>
+              <ArrowLeft size={16} />
+              Back to size selection
             </button>
           </>
         )}
@@ -319,7 +353,10 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
         {error && <div className={styles.error}>{error}</div>}
 
         <div className={styles.btnRow}>
-          <button className={styles.backBtn} onClick={onBack}>← Back</button>
+          <button className={styles.backBtn} onClick={onBack}>
+            <ArrowLeft size={16} />
+            Back
+          </button>
           <button className={styles.startBtn} onClick={handleStart} disabled={loading}>
             {loading ? 'Loading...' : 'Start Game'}
           </button>

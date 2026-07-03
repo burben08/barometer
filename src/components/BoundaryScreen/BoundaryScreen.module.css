@@ -9,8 +9,13 @@
 
 .map {
   height: 55vh;
-  width: 100%;
+  width: calc(100% - 20px);
+  margin: 10px 10px 0;
   flex-shrink: 0;
+  border: var(--c-border-w-thick) solid var(--c-border);
+  border-radius: var(--c-radius-sheet);
+  box-shadow: var(--c-shadow-md);
+  overflow: hidden;
   background: var(--c-surface);
 }
 
@@ -22,12 +27,12 @@
   display: flex;
   flex-direction: column;
   background: var(--c-bg);
-  border-top: 1px solid var(--c-border);
 }
 
 .controls h2 {
+  font-family: var(--c-font-display);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--c-text);
   margin-bottom: 4px;
 }
@@ -54,26 +59,22 @@
 }
 
 .sizeBtn {
+  composes: tactileSm from '../../styles/primitives.module.css';
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   padding: 12px 6px;
-  border: 1.5px solid var(--c-border);
-  background: var(--c-bg);
-  border-radius: 8px;
+  border: var(--c-border-w-thin) solid var(--c-border);
+  background: var(--c-surface);
+  border-radius: var(--c-radius-chip);
+  box-shadow: var(--c-shadow-sm);
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.15s;
-}
-
-.sizeBtn:hover {
-  border-color: var(--c-text);
 }
 
 .sizeBtn.selected {
-  background: var(--c-text);
-  border-color: var(--c-text);
+  background: var(--c-secondary-pastel);
 }
 
 .sizeLabel {
@@ -89,7 +90,7 @@
 
 .sizeBtn.selected .sizeLabel,
 .sizeBtn.selected .sizeSub {
-  color: white;
+  color: var(--c-text);
 }
 
 /* Region grid */
@@ -101,45 +102,43 @@
 }
 
 .regionBtn {
+  composes: tactileSm from '../../styles/primitives.module.css';
   padding: 13px 14px;
-  border: 1.5px solid var(--c-border);
-  background: var(--c-bg);
-  border-radius: 8px;
+  border: var(--c-border-w-thin) solid var(--c-border);
+  background: var(--c-surface);
+  border-radius: var(--c-radius-chip);
+  box-shadow: var(--c-shadow-sm);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   color: var(--c-text-2);
   text-align: left;
   font-family: inherit;
-  transition: all 0.15s;
-}
-
-.regionBtn:hover {
-  border-color: var(--c-text);
-  color: var(--c-text);
 }
 
 .regionBtn.selected {
-  background: var(--c-text);
-  color: white;
-  border-color: var(--c-text);
+  background: var(--c-secondary-pastel);
+  color: var(--c-text);
 }
 
-.link {
-  display: block;
-  background: none;
-  border: none;
-  padding: 0;
-  margin-bottom: 20px;
-  font-size: 13px;
+.navBtn {
+  composes: tactileSm from '../../styles/primitives.module.css';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 48px;
+  margin-bottom: 16px;
+  background: var(--c-surface);
+  border: var(--c-border-w-regular) solid var(--c-border);
+  border-radius: var(--c-radius-control);
+  box-shadow: var(--c-shadow-sm);
+  font-size: 14px;
   font-weight: 600;
-  color: var(--c-colder);
+  color: var(--c-text);
   cursor: pointer;
   font-family: inherit;
-}
-
-.link:hover {
-  text-decoration: underline;
 }
 
 /* Custom draw mode */
@@ -154,38 +153,40 @@
   flex: 1;
   -webkit-appearance: none;
   appearance: none;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--c-border);
+  height: 12px;
+  border-radius: var(--c-radius-chip);
+  background: var(--c-surface);
+  border: var(--c-border-w-regular) solid var(--c-border);
   outline: none;
 }
 
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: var(--c-text);
-  border: 3px solid white;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
+  background: var(--c-secondary);
+  border: var(--c-border-w-regular) solid var(--c-border);
+  box-shadow: var(--c-shadow-sm);
+  cursor: grab;
 }
 
 .slider::-moz-range-thumb {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: var(--c-text);
-  border: 3px solid white;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
+  background: var(--c-secondary);
+  border: var(--c-border-w-regular) solid var(--c-border);
+  box-shadow: var(--c-shadow-sm);
+  cursor: grab;
 }
 
 .sliderValue {
   flex-shrink: 0;
   min-width: 56px;
   text-align: right;
+  font-family: var(--c-font-display);
   font-size: 14px;
   font-weight: 700;
   color: var(--c-text);
@@ -203,7 +204,7 @@
   letter-spacing: 0.3px;
 }
 
-/* Adjust rows */
+/* Adjust rows (hidden behind SHOW_MANUAL_ADJUST, restyled for consistency) */
 .adjustGrid {
   display: flex;
   flex-direction: column;
@@ -226,30 +227,22 @@
 }
 
 .adjustBtn {
+  composes: tactileSm from '../../styles/primitives.module.css';
   width: 44px;
   height: 44px;
-  border: 1.5px solid var(--c-text);
-  background: var(--c-bg);
+  border: var(--c-border-w-regular) solid var(--c-border);
+  background: var(--c-surface);
   color: var(--c-text);
-  border-radius: 8px;
+  border-radius: var(--c-radius-control);
+  box-shadow: var(--c-shadow-sm);
   font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s, color 0.15s;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.adjustBtn:hover {
-  background: var(--c-text);
-  color: white;
-}
-
-.adjustBtn:active {
-  opacity: 0.7;
 }
 
 .value {
@@ -262,6 +255,7 @@
 
 .error {
   font-size: 13px;
+  font-weight: 600;
   color: var(--c-error);
   margin-bottom: 12px;
   min-height: 18px;
@@ -276,45 +270,42 @@
 }
 
 .backBtn {
+  composes: tactile from '../../styles/primitives.module.css';
+  display: flex;
+  align-items: center;
+  gap: 6px;
   height: 52px;
   padding: 0 20px;
-  background: var(--c-bg);
-  border: 1.5px solid var(--c-border);
-  border-radius: 10px;
+  background: var(--c-surface);
+  border: var(--c-border-w-regular) solid var(--c-border);
+  border-radius: var(--c-radius-control);
+  box-shadow: var(--c-shadow-md);
   font-size: 15px;
   font-weight: 600;
   color: var(--c-text);
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s;
   white-space: nowrap;
 }
 
-.backBtn:hover {
-  background: var(--c-surface);
-}
-
 .startBtn {
+  composes: tactile from '../../styles/primitives.module.css';
   flex: 1;
   height: 52px;
-  background: var(--c-accent);
-  color: white;
-  border: none;
-  border-radius: 10px;
+  background: var(--c-primary);
+  color: var(--c-text);
+  border: var(--c-border-w-regular) solid var(--c-border);
+  border-radius: var(--c-radius-control);
+  box-shadow: var(--c-shadow-md);
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
-  transition: opacity 0.15s;
-}
-
-.startBtn:hover {
-  opacity: 0.85;
 }
 
 .startBtn:disabled {
   opacity: 0.4;
-  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Desktop: side-by-side */
@@ -326,13 +317,14 @@
   }
 
   .map {
-    height: 100dvh;
+    height: calc(100dvh - 20px);
+    width: calc(100% - 20px);
+    margin: 10px;
     order: 2;
   }
 
   .controls {
     order: 1;
-    border-top: none;
-    border-right: 1px solid var(--c-border);
+    border-right: var(--c-border-w-thin) solid var(--c-border);
   }
 }

@@ -1,16 +1,51 @@
-/* Design tokens */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+/* Design tokens — "Playful Neo-Brutalism" (ported from design_template/) */
 :root {
-  --c-bg: #ffffff;
-  --c-surface: #f4f4f4;
-  --c-border: #e0e0e0;
-  --c-text: #0f0f0f;
-  --c-text-2: #6b6b6b;
-  --c-text-3: #a0a0a0;
-  --c-accent: #0f0f0f;
-  --c-warmer: #c0392b;
-  --c-colder: #1f6fbf;
-  --c-success: #1e7e44;
-  --c-error: #c0392b;
+  --c-bg: #F4ECE1;
+  --c-surface: #FFFFFF;
+  --c-border: #14110F;
+  --c-text: #14110F;
+  --c-text-2: #6B655D;
+  --c-text-3: #A8A096;
+  --c-accent: #FF6B6B;
+  --c-warmer: #FF6B6B;
+  --c-colder: #8CB1F5;
+  --c-success: #58B06A;
+  --c-error: #FF3B3B;
+
+  /* Full palette */
+  --c-surface-raised: #FFFFFF;
+  --c-primary: #FF6B6B;
+  --c-primary-pastel: #FF8C69;
+  --c-secondary: #7C6CFF;
+  --c-secondary-pastel: #C5C1FF;
+  --c-tertiary-pastel: #8CB1F5;
+  --c-success-pastel: #A8E6B8;
+  --c-warning: #FFC93C;
+  --c-danger: #FF3B3B;
+  --c-info: #8CB1F5;
+  --c-scrim: rgba(20, 17, 15, 0.5);
+
+  /* Type */
+  --c-font-display: 'Space Grotesk', sans-serif;
+  --c-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Radius scale */
+  --c-radius-chip: 0.75rem;
+  --c-radius-control: 1rem;
+  --c-radius-card: 1.5rem;
+  --c-radius-sheet: 2rem;
+
+  /* Border-width scale */
+  --c-border-w-thin: 2px;
+  --c-border-w-regular: 3px;
+  --c-border-w-thick: 4px;
+
+  /* Hard offset shadows — solid, never blurred */
+  --c-shadow-sm: 2px 2px 0px #14110F;
+  --c-shadow-md: 4px 4px 0px #14110F;
+  --c-shadow-lg: 6px 6px 0px #14110F;
 }
 
 /* Reset */
@@ -27,8 +62,7 @@ body,
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
-    sans-serif;
+  font-family: var(--c-font-body);
   background: var(--c-bg);
   color: var(--c-text);
   -webkit-font-smoothing: antialiased;
@@ -36,9 +70,15 @@ body {
 
 /* Leaflet popup overrides */
 .leaflet-popup-content-wrapper {
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius-card);
+  border: var(--c-border-w-regular) solid var(--c-border);
+  box-shadow: var(--c-shadow-md);
+  background: var(--c-surface);
+}
+
+.leaflet-popup-tip {
+  background: var(--c-surface);
+  box-shadow: none;
 }
 
 .leaflet-popup-content {
@@ -49,6 +89,7 @@ body {
 .bar-popup h3 {
   margin: 0 0 6px 0;
   color: var(--c-text);
+  font-family: var(--c-font-display);
   font-size: 15px;
   font-weight: 700;
 }
@@ -74,17 +115,48 @@ body {
 }
 
 /* Shared animations */
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.85); }
+  70%  { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounce-once {
+  0%, 100% { transform: translateY(0); }
+  30%      { transform: translateY(-6px); }
+  55%      { transform: translateY(0); }
+  75%      { transform: translateY(-2px); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-4px); }
+  40%      { transform: translateX(4px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(3px); }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.6); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* "You are here"-style pulsing marker: wrap a positioned element with class="pulse-ring" */
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: rgba(124, 108, 255, 0.5);
+  animation: pulse-ring 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
 }

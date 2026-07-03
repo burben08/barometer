@@ -16,8 +16,8 @@ No test runner or linter is configured yet.
 
 **Bar Hunt** is a browser-based "hot and cold" bar-finding game built with React + Vite. Players pick a starting location and game area, then guess bars by name. Each guess reveals warmer (closer) or colder (farther from the target), and an elimination zone polygon is drawn on the map to narrow the search.
 
-## UI
-The web app will be played mostly on phones. Consider this in the design of the UI. Make pages scrollable with longer text, so nothing is cutoff.
+## UI Design
+There is a UI design template with instructions in the design_template folder. When you create new UI elements try to follow the template. 
 
 ### Project structure
 
