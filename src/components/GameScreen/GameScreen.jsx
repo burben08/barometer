@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import L from 'leaflet'
 import { ArrowLeft } from 'lucide-react'
 import seedrandom from 'seedrandom'
+import { booleanPointInPolygon } from '@turf/turf'
 import {
   buildPolygon,
   getLineCoordsBetween,
@@ -15,6 +16,7 @@ import { drawRandomBarFromDensityGrid } from '../../lib/globalBarSelection'
 import { fetchBarsInBounds } from '../../lib/overpassApi'
 import { geocodeLocation } from '../../lib/geocoding'
 import { createSave, updateSave } from '../../lib/savedGames'
+import { loadCountryBoundary, hasCountryPolygon } from '../../lib/countryBoundaries'
 import { THEME } from '../../lib/theme'
 import styles from './GameScreen.module.css'
 
@@ -67,7 +69,7 @@ const PREVIEW_ICON = L.divIcon({
 
 // ── Component ──────────────────────────────────────────────────────────────
 export default function GameScreen({ config, onReset }) {
-  const { startLocation, gameBounds, selectedMode, restaurantsConsidered, seed } = config
+  const { startLocation, gameBounds, selectedMode, selectedSize, restaurantsConsidered, seed } = config
   const savedState = config.savedState || null
 
   // Leaflet refs
@@ -79,6 +81,9 @@ export default function GameScreen({ config, onReset }) {
   const previewMarkerRef = useRef(null)
   const mergedZoneCoords = useRef(null)
   const mergedZoneLayer = useRef(null)
+  // The real country outline, once loaded, for region mode's guess-verification
+  // and boundary drawing — see countryBoundaries.js. Null for non-country modes.
+  const countryGeometryRef = useRef(null)
 
   // Game data refs
   const allBarsRef = useRef([])
@@ -168,11 +173,26 @@ export default function GameScreen({ config, onReset }) {
     }).addTo(m)
     mapRef.current = m
 
-    const gameArea = L.rectangle(
+    let gameArea = L.rectangle(
       [[gameBounds.south, gameBounds.west], [gameBounds.north, gameBounds.east]],
       { color: THEME.border, weight: 2, fillOpacity: 0.05, dashArray: '6, 5' }
     ).addTo(m)
-    m.fitBounds(gameArea.getBounds(), { padding: [10, 10] })
+    m.fitBounds(gameArea.getBounds(), { padding: [10, 10], animate: false })
+
+    // Swap the loose backing rectangle for the real country outline once it
+    // loads (region mode on one of the 6 real countries only — see
+    // sphericalPolygon.js for why the elimination-zone math itself still
+    // uses the rectangle).
+    if (hasCountryPolygon(selectedMode, selectedSize)) {
+      loadCountryBoundary(selectedSize).then(geometry => {
+        if (!geometry || !mapRef.current) return
+        countryGeometryRef.current = geometry
+        gameArea.remove()
+        L.geoJSON(geometry, {
+          style: { color: THEME.border, weight: 2, fillOpacity: 0.05, dashArray: '6, 5' },
+        }).addTo(mapRef.current)
+      }).catch(() => {})
+    }
 
     L.marker([startLocation.lat, startLocation.lng], { icon: START_ICON })
       .addTo(m)
@@ -240,7 +260,7 @@ export default function GameScreen({ config, onReset }) {
         try {
           const bars =
             selectedMode === 'region'
-              ? await drawRandomBarFromDensityGrid(gameBounds, seed)
+              ? await drawRandomBarFromDensityGrid(gameBounds, seed, hasCountryPolygon(selectedMode, selectedSize) ? selectedSize : null)
               : await fetchBarsInBounds(gameBounds, restaurantsConsidered)
 
           allBarsRef.current = bars
@@ -251,9 +271,9 @@ export default function GameScreen({ config, onReset }) {
                 html: `<div style="background:${THEME.danger};width:10px;height:10px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
                 className: '',
               })
-              L.marker([bar.lat, bar.lng], { icon }).addTo(m)
+              const marker = L.marker([bar.lat, bar.lng], { icon }).addTo(m)
                 .bindPopup(`<div class="bar-popup"><h3>${bar.name}</h3></div>`)
-              markersRef.current.push(L.marker([bar.lat, bar.lng], { icon }).addTo(m))
+              markersRef.current.push(marker)
             })
             setRemainingBars(`${bars.length}/${bars.length}`)
           }
@@ -315,10 +335,13 @@ export default function GameScreen({ config, onReset }) {
       if (!bar) { showBanner(`Could not find "${query}". Try a different name.`, 'error'); return }
 
       const { location } = bar
-      if (
-        location.lat < gameBounds.south || location.lat > gameBounds.north ||
-        location.lng < gameBounds.west || location.lng > gameBounds.east
-      ) {
+      const isInside = countryGeometryRef.current
+        ? booleanPointInPolygon([location.lng, location.lat], countryGeometryRef.current)
+        : (
+          location.lat >= gameBounds.south && location.lat <= gameBounds.north &&
+          location.lng >= gameBounds.west && location.lng <= gameBounds.east
+        )
+      if (!isInside) {
         showBanner(`"${query}" is outside the game area.`, 'error')
         return
       }

@@ -17,7 +17,14 @@ export const STEP_SIZES = Object.fromEntries(
 
 export const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'HUGE']
 
-export const REGIONS = ['Switzerland', 'Germany', 'France', 'Italy', 'Austria', 'Spain', 'Europe']
+// Countries have a real bundled boundary polygon (see countryBoundaries.js)
+// and verified bar selection. Continents don't (no single administrative
+// shape, and "fetch every bar" isn't feasible at that scale) — hidden from
+// the region picker for now so region mode stays internally consistent;
+// re-enable by including CONTINENTS in the picker once that's solved.
+export const COUNTRIES = ['Switzerland', 'Germany', 'France', 'Italy', 'Austria', 'Spain']
+export const CONTINENTS = ['Europe']
+export const REGIONS = [...COUNTRIES, ...CONTINENTS]
 
 export const REGION_FLAGS = {
   Switzerland: '🇨🇭',

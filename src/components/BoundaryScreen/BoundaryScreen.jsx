@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import L from 'leaflet'
 import { Globe, Pencil, ArrowLeft } from 'lucide-react'
-import { SIZE_PRESETS, STEP_SIZES, SIZES, REGIONS, REGION_FLAGS } from '../../constants'
+import { SIZE_PRESETS, STEP_SIZES, SIZES, COUNTRIES, REGION_FLAGS } from '../../constants'
 import {
   GAME_BOUNDS_Regions,
   calculateBoundsFromCenter,
   calculateBoundsFromDiameterKm,
   boundsDimensionsKm,
 } from '../../lib/gameBounds'
+import { loadCountryBoundary } from '../../lib/countryBoundaries'
 import { THEME } from '../../lib/theme'
 import styles from './BoundaryScreen.module.css'
 
@@ -89,6 +90,7 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
   const mapContainerRef = useRef(null)
   const mapRef = useRef(null)
   const rectangleRef = useRef(null)
+  const countryLayerRef = useRef(null)
   const cornerMarkersRef = useRef({})
   const dragStartBoundsRef = useRef(null)
   const liveBoundsRef = useRef(null)
@@ -102,6 +104,9 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
   )
   const [customKm, setCustomKm] = useState(SIZE_PRESETS.M)
   const [panelMode, setPanelMode] = useState('sizes') // 'sizes' | 'country' | 'custom'
+  // The real country outline for the selected country, when one's loaded —
+  // drawn instead of the (still math-backing) rectangle. See countryBoundaries.js.
+  const [countryPolygon, setCountryPolygon] = useState(null)
   // Mirrors gameBounds during an active corner drag, purely so the summary text can
   // update live without re-running the map-drawing effects on every drag tick.
   const [liveDragBounds, setLiveDragBounds] = useState(null)
@@ -128,23 +133,39 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
   useEffect(() => {
     const m = mapRef.current
     if (!m) return
-    if (rectangleRef.current) rectangleRef.current.remove()
+    if (rectangleRef.current) { rectangleRef.current.remove(); rectangleRef.current = null }
+    if (countryLayerRef.current) { countryLayerRef.current.remove(); countryLayerRef.current = null }
+
     const bounds = [[gameBounds.south, gameBounds.west], [gameBounds.north, gameBounds.east]]
-    rectangleRef.current = L.rectangle(bounds, {
-      color: THEME.border,
-      weight: 2,
-      fillOpacity: 0.05,
-    }).addTo(m)
+    let fitTarget = bounds
+
+    if (countryPolygon) {
+      countryLayerRef.current = L.geoJSON(countryPolygon, {
+        style: { color: THEME.border, weight: 2, fillOpacity: 0.05 },
+      }).addTo(m)
+      fitTarget = countryLayerRef.current.getBounds()
+    } else {
+      rectangleRef.current = L.rectangle(bounds, {
+        color: THEME.border,
+        weight: 2,
+        fillOpacity: 0.05,
+      }).addTo(m)
+    }
 
     Object.entries(cornerMarkersRef.current).forEach(([name, marker]) => {
       marker.setLatLng(cornerLatLng(name, gameBounds))
     })
 
     if (!skipFitRef.current) {
-      m.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 })
+      // animate:false matters here, not just cosmetic: with React 18 Strict
+      // Mode's dev-only mount→cleanup→mount cycle, an animated fitBounds
+      // triggered during that transient first mount can leave the surviving
+      // map instance settled on the wrong zoom/center — snapping instantly
+      // sidesteps it.
+      m.fitBounds(fitTarget, { padding: [50, 50], maxZoom: 15, animate: false })
     }
     skipFitRef.current = false
-  }, [gameBounds])
+  }, [gameBounds, countryPolygon])
 
   // Add/remove the draggable corner handles as custom drawing mode is toggled.
   useEffect(() => {
@@ -174,6 +195,7 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
       marker.on('dragend', () => {
         setSelectedSize('Custom')
         setSelectedMode('custom')
+        setCountryPolygon(null)
         skipFitRef.current = true
         setLiveDragBounds(null)
         setGameBounds(liveBoundsRef.current)
@@ -194,13 +216,21 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
   function selectSize(size) {
     setSelectedSize(size)
     setSelectedMode('custom')
+    setCountryPolygon(null)
     setGameBounds(calculateBoundsFromCenter(config.startLocation, size))
   }
 
-  function selectRegion(region) {
+  // Prefetches the polygon before touching gameBounds/countryPolygon, so the
+  // map only ever fitBounds's once (straight to the real shape) instead of
+  // fitting to the rectangle and then immediately re-fitting to the polygon
+  // a moment later — back-to-back fitBounds calls raced Leaflet's own
+  // pan/zoom animation and could leave the map settled on the wrong view.
+  async function selectRegion(region) {
     setSelectedSize(region)
     setSelectedMode('region')
+    const polygon = await loadCountryBoundary(region).catch(() => null)
     setGameBounds(GAME_BOUNDS_Regions[region])
+    setCountryPolygon(polygon)
   }
 
   function enterCustomMode() {
@@ -208,6 +238,7 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
     setCustomKm(startKm)
     setSelectedSize('Custom')
     setSelectedMode('custom')
+    setCountryPolygon(null)
     setGameBounds(calculateBoundsFromDiameterKm(config.startLocation, startKm))
     setPanelMode('custom')
   }
@@ -221,6 +252,7 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
     setCustomKm(km)
     setSelectedSize('Custom')
     setSelectedMode('custom')
+    setCountryPolygon(null)
     setGameBounds(next)
   }
 
@@ -286,7 +318,7 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
         {panelMode === 'country' && (
           <>
             <div className={styles.regionGrid}>
-              {REGIONS.map(region => (
+              {COUNTRIES.map(region => (
                 <button
                   key={region}
                   className={`${styles.regionBtn} ${selectedMode === 'region' && selectedSize === region ? styles.selected : ''}`}

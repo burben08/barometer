@@ -1,12 +1,20 @@
 import { SIZE_PRESETS } from '../constants'
 
+// These are just the backing rectangles used for Overpass query-scoping and
+// the (rectangle-based, see sphericalPolygon.js) elimination-zone splitting
+// math — never shown to the player directly for the 6 real countries, which
+// draw their actual boundary from public/country_boundaries.json instead
+// (see src/lib/countryBoundaries.js). Values below are each country's real
+// polygon bounding box (from tools/FetchCountryBoundaries.py) plus a small
+// 0.1° safety margin. Europe has no bundled polygon and is currently hidden
+// from the region picker (see BoundaryScreen.jsx's SHOW_CONTINENTS).
 export const GAME_BOUNDS_Regions = {
-  Switzerland: { south: 45.817, north: 47.808, west: 5.955, east: 10.492 },
-  Germany: { south: 47.270111, north: 55.058347, west: 5.866342, east: 15.041896 },
-  France: { south: 41.33, north: 51.09, west: -5.14, east: 9.56 },
-  Italy: { south: 36.65, north: 47.09, west: 6.62, east: 18.98 },
-  Austria: { south: 46.37, north: 49.02, west: 9.53, east: 17.16 },
-  Spain: { south: 36.0, north: 43.8, west: -9.3, east: 3.3 },
+  Switzerland: { south: 45.730, north: 47.876, west: 5.870, east: 10.555 },
+  Germany: { south: 47.179, north: 55.159, west: 5.758, east: 15.117 },
+  France: { south: 41.285, north: 51.197, west: -4.863, east: 9.651 },
+  Italy: { south: 36.588, north: 47.182, west: 6.528, east: 18.586 },
+  Austria: { south: 46.300, north: 49.101, west: 9.424, east: 17.247 },
+  Spain: { south: 35.926, north: 43.865, west: -9.336, east: 4.422 },
   Europe: { south: 34.5, north: 71.2, west: -25.0, east: 40.0 },
 }
 
