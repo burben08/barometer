@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
-import { MapPin, Keyboard, LocateFixed } from 'lucide-react'
+import { MapPin, Keyboard, LocateFixed, Link2, CircleQuestionMark } from 'lucide-react'
 import { geocodeLocation, reverseGeocode } from '../../lib/geocoding'
 import { getSaves, deleteSave } from '../../lib/savedGames'
+import HowToPlay from '../HowToPlay/HowToPlay'
 import styles from './SetupScreen.module.css'
+
+const HOWTO_SEEN_KEY = 'barHuntHowToSeen'
 
 // Advanced panel (seed / restaurants) is hidden for this prototype to keep
 // the setup flow simple. The functionality is kept intact so it can be
@@ -24,7 +27,7 @@ function getSaveLabel(save) {
   return `${config.selectedSize} · ${config.startLocation.name}`
 }
 
-export default function SetupScreen({ onContinue, onLoadSave }) {
+export default function SetupScreen({ onContinue, onLoadSave, onJoinCode, joinError, extremeMode, onSetExtreme }) {
   const [activeSection, setActiveSection] = useState('location')
 
   // 'current' = use the device's geolocation (default), 'manual' = typed address
@@ -40,7 +43,28 @@ export default function SetupScreen({ onContinue, onLoadSave }) {
   const [loading, setLoading] = useState(false)
 
   const [saves, setSaves] = useState(() => getSaves())
+  const visibleSaves = saves.filter(s => !!s.config.isExtreme === extremeMode)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+
+  const [joinCode, setJoinCode] = useState('')
+
+  // Auto-open the rules the first time the app is opened on this device.
+  const [showHowTo, setShowHowTo] = useState(() => {
+    try {
+      return !localStorage.getItem(HOWTO_SEEN_KEY)
+    } catch {
+      return false
+    }
+  })
+
+  function closeHowTo() {
+    setShowHowTo(false)
+    try {
+      localStorage.setItem(HOWTO_SEEN_KEY, '1')
+    } catch {
+      // storage unavailable — the rules will simply auto-open again next time
+    }
+  }
 
   useEffect(() => {
     detectCurrentLocation()
@@ -93,6 +117,19 @@ export default function SetupScreen({ onContinue, onLoadSave }) {
     setConfirmDeleteId(null)
   }
 
+  function handleJoin() {
+    const trimmed = joinCode.trim()
+    if (!trimmed) return
+    let code = trimmed
+    try {
+      const asUrl = new URL(trimmed)
+      code = asUrl.searchParams.get('g') || trimmed
+    } catch {
+      // not a URL — treat the pasted text as the bare code
+    }
+    onJoinCode(code)
+  }
+
   async function handleContinue() {
     setError('')
 
@@ -126,6 +163,7 @@ export default function SetupScreen({ onContinue, onLoadSave }) {
         startLocation,
         restaurantsConsidered: restaurants,
         seed: finalSeed,
+        isExtreme: extremeMode,
       })
     } catch (err) {
       setError(err.message)
@@ -139,8 +177,28 @@ export default function SetupScreen({ onContinue, onLoadSave }) {
       <div className={styles.pageContent}>
 
         {/* Title */}
-        <h1 className={styles.title}>Barometer</h1>
-        <p className={styles.subtitle}>Find the secret bar</p>
+        <h1 className={styles.title}>{extremeMode ? 'Barometer Extreme' : 'Barometer'}</h1>
+        {extremeMode ? (
+          <p className={styles.subtitle}>
+            Some clues are lies.{' '}
+            <button type="button" className={styles.backToNormal} onClick={() => onSetExtreme(false)}>
+              Back to regular Barometer
+            </button>
+          </p>
+        ) : (
+          <p className={styles.subtitle}>
+            Find the{' '}
+            <span className={styles.secretTrigger} onClick={() => onSetExtreme(true)}>secret</span>
+            {' '}bar
+          </p>
+        )}
+
+        {!extremeMode && (
+          <button type="button" className={styles.howToBtn} onClick={() => setShowHowTo(true)}>
+            <CircleQuestionMark size={16} />
+            How to Play
+          </button>
+        )}
 
         {/* Starting Location — the only visible section, so it's a plain
             static card rather than a collapsible accordion. */}
@@ -237,11 +295,36 @@ export default function SetupScreen({ onContinue, onLoadSave }) {
           {loading ? 'Loading...' : 'Continue'}
         </button>
 
+        {/* Join a shared game — paste a link or code from another player */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeaderStatic}>
+            <span className={styles.sectionTitle}>Join a Shared Game</span>
+          </div>
+          <div className={styles.sectionInner}>
+            <div className={styles.locationCard}>
+              <input
+                type="text"
+                className={styles.input}
+                value={joinCode}
+                onChange={e => setJoinCode(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleJoin() }}
+                placeholder="Paste a share link or code..."
+                autoComplete="off"
+              />
+              {joinError && <div className={styles.error}>{joinError}</div>}
+              <button type="button" className={styles.navBtn} onClick={handleJoin}>
+                <Link2 size={16} />
+                Join Game
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Saved games */}
-        {saves.length > 0 && (
+        {visibleSaves.length > 0 && (
           <div className={styles.savesSection}>
             <p className={styles.savesTitle}>Saved Games</p>
-            {saves.map(save => (
+            {visibleSaves.map(save => (
               <div key={save.id} className={styles.saveItem}>
                 <div className={styles.saveLeft}>
                   <span className={`${styles.saveStatus} ${save.isFinished ? styles.statusFinished : styles.statusProgress}`}>
@@ -282,6 +365,8 @@ export default function SetupScreen({ onContinue, onLoadSave }) {
         )}
 
       </div>
+
+      {showHowTo && !extremeMode && <HowToPlay onClose={closeHowTo} />}
     </div>
   )
 }

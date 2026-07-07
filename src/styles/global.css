@@ -86,6 +86,15 @@ body {
   font-size: 14px;
 }
 
+/* Leaflet's default close button sits flush at top:0/right:0, which the
+   wrapper's border-radius then clips into. Inset it so it clears the
+   rounded corner. */
+.leaflet-popup-close-button {
+  top: 8px !important;
+  right: 8px !important;
+  color: var(--c-text) !important;
+}
+
 .bar-popup h3 {
   margin: 0 0 6px 0;
   color: var(--c-text);
@@ -98,6 +107,31 @@ body {
   margin: 3px 0;
   color: var(--c-text-2);
   font-size: 13px;
+}
+
+/* Barometer Extreme only — "Use Confirmation Joker" button inside a bar's
+   popup. Popup content is raw HTML outside React/CSS Modules, so this can't
+   compose the shared tactile-press primitive and hand-copies it instead. */
+.bar-popup-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px 10px;
+  background: var(--c-secondary);
+  color: white;
+  border: var(--c-border-w-thin) solid var(--c-border);
+  border-radius: var(--c-radius-chip);
+  box-shadow: var(--c-shadow-sm);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+.bar-popup-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 .visit-number {
@@ -131,6 +165,14 @@ body {
   30%      { transform: translateY(-6px); }
   55%      { transform: translateY(0); }
   75%      { transform: translateY(-2px); }
+}
+
+/* A value already showing its new state "flips into place" — used when a
+   Barometer Extreme clue's warmer/colder display changes (manual lie-flag,
+   or a Confirmation Joker revealing a different truth). */
+@keyframes flip-in {
+  from { transform: rotateY(90deg); }
+  to   { transform: rotateY(0deg); }
 }
 
 @keyframes shake {

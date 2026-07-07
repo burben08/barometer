@@ -1,0 +1,184 @@
+/* Blocking modal — follows design_template/patterns/modal-toast-banner.md */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--c-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 16px;
+}
+
+.dialog {
+  background: var(--c-surface);
+  border: var(--c-border-w-thick) solid var(--c-border);
+  border-radius: var(--c-radius-sheet);
+  box-shadow: var(--c-shadow-lg);
+  animation: pop-in 220ms cubic-bezier(.34, 1.56, .64, 1) both;
+  padding: 24px 22px 22px;
+  max-width: 380px;
+  width: 100%;
+  max-height: 88dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-family: var(--c-font-display);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+}
+
+.closeBtn {
+  composes: tactileSm from '../../../styles/primitives.module.css';
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-surface);
+  border: var(--c-border-w-thin) solid var(--c-border);
+  border-radius: var(--c-radius-chip);
+  box-shadow: var(--c-shadow-sm);
+  color: var(--c-text);
+  cursor: pointer;
+}
+
+/* ── Hero: big score + tier chip ── */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.scoreWrap {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.score {
+  font-family: var(--c-font-display);
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--c-text);
+}
+
+.scoreMax {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-text-3);
+}
+
+.tierChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: var(--c-border-w-thin) solid var(--c-border);
+  border-radius: var(--c-radius-chip);
+  box-shadow: var(--c-shadow-sm);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-text);
+  white-space: nowrap;
+}
+
+/* Tier backgrounds, easy → hard (shared by chip + meter segments) */
+.tier0 { background: var(--c-success-pastel); }
+.tier1 { background: var(--c-tertiary-pastel); }
+.tier2 { background: var(--c-secondary-pastel); }
+.tier3 { background: var(--c-warning); }
+.tier4 { background: var(--c-primary-pastel); }
+
+/* ── Tier meter ── */
+.meter {
+  position: relative;
+  margin-bottom: 22px;
+  padding-top: 4px;
+}
+
+.meterTrack {
+  display: flex;
+  height: 16px;
+  border: var(--c-border-w-thin) solid var(--c-border);
+  border-radius: var(--c-radius-chip);
+  overflow: hidden;
+}
+
+.meterSeg {
+  flex: 1;
+}
+
+.meterSeg + .meterSeg {
+  border-left: var(--c-border-w-thin) solid var(--c-border);
+}
+
+.meterMarker {
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 24px;
+  transform: translateX(-50%);
+  background: var(--c-text);
+  border-radius: 3px;
+  border: 1px solid var(--c-surface);
+}
+
+/* ── Breakdown rows ── */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: var(--c-border-w-thin) solid var(--c-border);
+  border-radius: var(--c-radius-chip);
+  background: var(--c-surface);
+}
+
+.rowIcon {
+  flex-shrink: 0;
+  color: var(--c-text-2);
+}
+
+.rowLabel {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text-2);
+}
+
+.rowValue {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-text);
+  white-space: nowrap;
+}
+
+/* ── Explainer ── */
+.explainer {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--c-text-2);
+}

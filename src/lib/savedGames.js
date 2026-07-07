@@ -32,12 +32,17 @@ function buildEntry(config, gs, allBars, mergedZoneCoords, visitCount) {
       selectedSize: config.selectedSize,
       restaurantsConsidered: config.restaurantsConsidered,
       seed: config.seed,
+      isExtreme: !!config.isExtreme,
     },
     gameState: {
       targetBar: gs.targetBar,
       targetLocation: gs.targetLocation,
       visitedBars: gs.visitedBars.map(b => ({ ...b })),
       gameWon: gs.gameWon,
+      jokers: gs.jokers,
+      // Session-capped play clock (see GameScreen's bumpPlayTime). null on
+      // games that predate the clock — they never start counting.
+      playTimeMs: gs.playTimeMs ?? null,
     },
     allBars: allBars.map(b => ({ ...b })),
     mergedZoneCoords: mergedZoneCoords ? [...mergedZoneCoords] : null,

@@ -32,6 +32,43 @@
   margin-bottom: 36px;
 }
 
+/* The word "secret" is a genuine hidden trigger into Extreme mode — no
+   visual affordance, so it reads as plain text until clicked. */
+.secretTrigger {
+  cursor: pointer;
+}
+
+.backToNormal {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--c-secondary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── How to Play pill ── */
+.howToBtn {
+  composes: tactileSm from '../../styles/primitives.module.css';
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  margin: -20px 0 28px;
+  background: var(--c-warning);
+  border: var(--c-border-w-regular) solid var(--c-border);
+  border-radius: var(--c-radius-chip);
+  box-shadow: var(--c-shadow-sm);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-text);
+  cursor: pointer;
+  font-family: inherit;
+}
+
 /* ── Accordion sections ── */
 .section {
   border: var(--c-border-w-regular) solid var(--c-border);

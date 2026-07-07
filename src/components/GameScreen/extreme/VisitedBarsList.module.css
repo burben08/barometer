@@ -1,0 +1,153 @@
+/* ── Bar history log (Extreme mode only) ── */
+.wrap {
+  padding: 0 16px 12px;
+  border-top: var(--c-border-w-thin) solid var(--c-border);
+}
+
+.list {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  /* Bottom/right padding deliberately generous: the corner badges overhang
+     -6px past their circle, and a scroll container's padding box isn't
+     clipped the way its border box is — this is what actually keeps them
+     visible (overflow-y:visible alone would not, since overflow-x:auto
+     forces the browser to compute overflow-y as auto regardless of what's
+     written here). */
+  padding: 10px 10px 12px 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.arrow {
+  color: var(--c-text-3);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.entry {
+  position: relative;
+  flex-shrink: 0;
+  /* Gives the flip animation's rotateY real 3D depth instead of a flat
+     horizontal squish. */
+  perspective: 400px;
+  transition: opacity 0.2s;
+}
+
+.entry.dimmed {
+  opacity: 0.38;
+}
+
+.circle {
+  composes: tactileSm from '../../../styles/primitives.module.css';
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--c-text);
+  border: var(--c-border-w-regular) solid var(--c-border);
+  box-shadow: var(--c-shadow-sm);
+  cursor: pointer;
+  backface-visibility: hidden;
+}
+
+.circle.flipping {
+  animation: flip-in 380ms ease-out;
+}
+
+.warmer { background: var(--c-warmer); }
+.colder { background: var(--c-colder); }
+
+.win {
+  background: var(--c-success);
+  color: white;
+}
+
+/* Corner control — toggles the lie-flag. Shows no icon in its default
+   (unflagged, unconfirmed) state; swaps to a circular arrow once flagged. */
+.toggleBtn {
+  composes: tactileSm from '../../../styles/primitives.module.css';
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-surface);
+  border: var(--c-border-w-thin) solid var(--c-border);
+  border-radius: 50%;
+  box-shadow: var(--c-shadow-sm);
+  color: var(--c-text-3);
+  cursor: pointer;
+  padding: 0;
+}
+
+.toggleBtnActive {
+  background: var(--c-warning);
+  color: var(--c-text);
+}
+
+/* Confirmed via a Confirmation Joker — locked in, no longer flippable. */
+.lockBadge {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-secondary);
+  border: var(--c-border-w-thin) solid var(--c-border);
+  border-radius: 50%;
+  box-shadow: var(--c-shadow-sm);
+  color: white;
+}
+
+/* ── Caption ── */
+.caption {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--c-text-3);
+  padding: 0 2px;
+}
+
+/* ── Hide-bars drag scrubber ── */
+.divider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  border-left: 2px solid var(--c-text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ew-resize;
+  touch-action: none;
+  /* Wider than the visible line so it's easy to grab, especially on touch. */
+  padding: 0 10px;
+  margin-left: -10px;
+}
+
+.dividerHandle {
+  width: 4px;
+  height: 22px;
+  background: var(--c-border);
+  border-radius: 2px;
+}

@@ -304,14 +304,16 @@ export default function BoundaryScreen({ config, onStart, onBack }) {
               ))}
             </div>
 
-            <button type="button" className={styles.navBtn} onClick={() => setPanelMode('country')}>
-              <Globe size={16} />
-              Use a country boundary instead
-            </button>
-            <button type="button" className={styles.navBtn} onClick={enterCustomMode}>
-              <Pencil size={16} />
-              Draw a custom boundary instead
-            </button>
+            <div className={styles.navRow}>
+              <button type="button" className={styles.navBtn} onClick={() => setPanelMode('country')}>
+                <Globe size={16} />
+                Country
+              </button>
+              <button type="button" className={styles.navBtn} onClick={enterCustomMode}>
+                <Pencil size={16} />
+                Draw
+              </button>
+            </div>
           </>
         )}
 

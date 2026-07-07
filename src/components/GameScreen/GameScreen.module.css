@@ -64,6 +64,13 @@
   gap: 5px;
 }
 
+/* Icon-only round variant (How to Play) */
+.floatBtnIcon {
+  width: 36px;
+  padding: 0;
+  justify-content: center;
+}
+
 /* ── Bottom panel ── */
 .bottomPanel {
   background: var(--c-bg);
@@ -129,6 +136,48 @@
   font-weight: 600;
   color: var(--c-text-2);
 }
+
+/* Barometer Extreme only — held-Jokers count, opens the inventory modal */
+.jokerBadge {
+  composes: tactileSm from '../../styles/primitives.module.css';
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  background: var(--c-surface);
+  border: var(--c-border-w-thin) solid var(--c-border);
+  border-radius: var(--c-radius-chip);
+  box-shadow: var(--c-shadow-sm);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-text);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Difficulty rating chip — opens the breakdown modal. Background ramps
+   through the five tier classes below, easy → hard. */
+.difficultyChip {
+  composes: tactileSm from '../../styles/primitives.module.css';
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: var(--c-border-w-thin) solid var(--c-border);
+  border-radius: var(--c-radius-chip);
+  box-shadow: var(--c-shadow-sm);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-text);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.tier0 { background: var(--c-success-pastel); }
+.tier1 { background: var(--c-tertiary-pastel); }
+.tier2 { background: var(--c-secondary-pastel); }
+.tier3 { background: var(--c-warning); }
+.tier4 { background: var(--c-primary-pastel); }
 
 /* ── Search section (collapsible) ── */
 /* Timing is coupled to a 310ms setTimeout in GameScreen.jsx that calls
@@ -283,6 +332,28 @@
   font-family: inherit;
 }
 
+/* Barometer Extreme only — secondary action below Confirm/Cancel, logs the
+   previewed bar without traveling there by spending a Shortcut Joker. */
+.freeCutBtn {
+  composes: tactileSm from '../../styles/primitives.module.css';
+  width: 100%;
+  height: 44px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--c-success-pastel);
+  color: var(--c-text);
+  border: var(--c-border-w-regular) solid var(--c-border);
+  border-radius: var(--c-radius-control);
+  box-shadow: var(--c-shadow-sm);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 /* Win section */
 .winSection {
   display: flex;
@@ -300,6 +371,26 @@
   line-height: 1.3;
 }
 
+/* Reopens the win-stats modal after it's been dismissed */
+.statsBtn {
+  composes: tactileSm from '../../styles/primitives.module.css';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  background: var(--c-surface);
+  border: var(--c-border-w-regular) solid var(--c-border);
+  border-radius: var(--c-radius-control);
+  box-shadow: var(--c-shadow-sm);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-text);
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .newGameBtn {
   composes: tactile from '../../styles/primitives.module.css';
   width: 100%;
@@ -314,4 +405,82 @@
   cursor: pointer;
   font-family: inherit;
 }
+
+/* ── Share modal ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--c-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 20px;
+}
+
+.dialog {
+  background: var(--c-surface);
+  border: var(--c-border-w-thick) solid var(--c-border);
+  border-radius: var(--c-radius-sheet);
+  box-shadow: var(--c-shadow-lg);
+  animation: pop-in 220ms cubic-bezier(.34, 1.56, .64, 1) both;
+  padding: 24px 20px 20px;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+}
+
+.dialogTitle {
+  font-family: var(--c-font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-text);
+  margin-bottom: 16px;
+}
+
+.qrWrap {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  background: white;
+  border: var(--c-border-w-regular) solid var(--c-border);
+  border-radius: var(--c-radius-card);
+  margin-bottom: 16px;
+}
+
+.qrTooLong {
+  font-size: 13px;
+  color: var(--c-text-2);
+  margin-bottom: 16px;
+}
+
+.shareLink {
+  font-size: 12px;
+  color: var(--c-text-2);
+  background: var(--c-bg);
+  border: var(--c-border-w-thin) solid var(--c-border);
+  border-radius: var(--c-radius-control);
+  padding: 10px 12px;
+  word-break: break-all;
+  margin-bottom: 12px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.dialogBtns { display: flex; flex-direction: column; gap: 8px; }
+.dialogBtns button {
+  width: 100%;
+  padding: 12px;
+  border: var(--c-border-w-regular) solid var(--c-border);
+  border-radius: var(--c-radius-control);
+  box-shadow: var(--c-shadow-sm);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+.dialogBtns button:active { transform: translate(2px, 2px); box-shadow: none !important; }
+
+.copyBtn { background: var(--c-primary); color: var(--c-text); }
+.closeBtn { background: var(--c-surface); color: var(--c-text); }
 
